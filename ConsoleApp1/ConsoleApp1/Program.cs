@@ -144,7 +144,7 @@ namespace ConsoleApp1
             SummaryActivity summary)
         {
             Id = $"{summary.Athlete.FirstName}_{summary.Athlete.LastName}_{summary.ElapsedTime}" +
-                $"_{summary.Distance}_{summary.MovingTime}";
+                $"_{summary.Distance}";
             Summary = summary;
         }
 
