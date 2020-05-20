@@ -102,7 +102,7 @@ namespace ConsoleApp1
 
         private static IEnumerable<SummaryActivity> FetchData()
         {
-            Configuration.ApiKey["access"] = "9a9be2bb0cfbb21b1fd05198167e8357aa54e239";
+            Configuration.ApiKey["access"] = "8a2ee8524be3bf390ea84adf14729256b617a3a4";
             Configuration.ApiKeyPrefix["access"] = "Bearer";
             ApiClient client = new ApiClient();
             ClubsApi clubsApi = new ClubsApi(client);
