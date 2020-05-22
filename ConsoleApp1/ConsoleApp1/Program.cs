@@ -51,6 +51,7 @@ namespace ConsoleApp1
             string template = File.ReadAllText("../../../Template.html");
             string content = template.Replace("{{distanceRows}}", distanceRows.ToString());
             content = content.Replace("{{timeRows}}", timeRows.ToString());
+            content = content.Replace("{{updated}}", DateTime.Now.ToString("dddd, MMMM dd, hh:mm tt ET"));
 
             File.WriteAllText("../../../../../index.html", content);
         }

@@ -10,4 +10,8 @@
     <PackageReference Include="RestSharp.Net2" Version="1.1.11" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="assets\" />
+  </ItemGroup>
+
 </Project>
