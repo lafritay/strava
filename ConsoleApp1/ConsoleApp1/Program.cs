@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
 using IO.Swagger.Api;
 using IO.Swagger.Client;
 using IO.Swagger.Model;
@@ -10,11 +13,51 @@ using Newtonsoft.Json;
 
 namespace ConsoleApp1
 {
-    internal class Program
+    internal partial class Program
     {
-        private static void Main(string[] args)
+        private static async Task<Tokens> RefreshCodeAsync(
+            Creds2 creds)
         {
-            IEnumerable<SummaryActivity> data = FetchData();
+            using (HttpClient httpClient = new HttpClient())
+            {
+                using (HttpRequestMessage request = new HttpRequestMessage(new HttpMethod("POST"), "https://www.strava.com/api/v3/oauth/token"))
+                {
+                    List<string> contentList = new List<string>
+                    {
+                        $"client_id={creds.ClientId}",
+                        $"client_secret={creds.ClientSecret}",
+                        "grant_type=refresh_token",
+                        $"refresh_token={creds.Tokens.RefreshToken}"
+                    };
+                    request.Content = new StringContent(string.Join("&", contentList));
+                    request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded");
+
+                    HttpResponseMessage response = await httpClient.SendAsync(request);
+
+                    return JsonConvert.DeserializeObject<Tokens>(await response.Content.ReadAsStringAsync());
+                }
+            }
+        }
+
+        private static async Task Main(string[] args)
+        {
+            Creds2 creds = JsonConvert.DeserializeObject<Creds2>(File.ReadAllText("creds2.txt"));
+
+            if (DateTime.UtcNow > creds.Tokens.GetExpiresAt())
+            {
+                Tokens tokens = await RefreshCodeAsync(creds);
+
+                creds = new Creds2
+                {
+                    ClientId = creds.ClientId,
+                    ClientSecret = creds.ClientSecret,
+                    Tokens = tokens
+                };
+
+                File.WriteAllText("creds2.txt", JsonConvert.SerializeObject(creds));
+            }
+
+            IEnumerable<SummaryActivity> data = FetchData(creds.Tokens.AccessToken);
             IEnumerable<UserSummary> collated = CollateData(data);
             StringBuilder distanceRows = new StringBuilder();
             UserSummary[] distance = collated.OrderByDescending(d => d.TotalDistance()).ToArray();
@@ -101,9 +144,10 @@ namespace ConsoleApp1
             return summaries.Values;
         }
 
-        private static IEnumerable<SummaryActivity> FetchData()
+        private static IEnumerable<SummaryActivity> FetchData(
+            string accessToken)
         {
-            Configuration.ApiKey["access"] = "08c9b33964cc792ff593f6c2c21fc0578b1e2bad";
+            Configuration.ApiKey["access"] = accessToken;
             Configuration.ApiKeyPrefix["access"] = "Bearer";
             ApiClient client = new ApiClient();
             ClubsApi clubsApi = new ClubsApi(client);
