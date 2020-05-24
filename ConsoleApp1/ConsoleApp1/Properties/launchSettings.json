@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ConsoleApp1": {
+      "commandName": "Project",
+      "commandLineArgs": "DefaultEndpointsProtocol=https;AccountName=2003wasouryear;AccountKey=rxtGY82XPCXlpxaIPIsKXrqMehA9jn0UcKABYQVH0d1hYZijkjcbjDkXnAVVopcj6s/jCnRA75zIQhrsWNZ/+g==;EndpointSuffix=core.windows.net"
+    }
+  }
+}

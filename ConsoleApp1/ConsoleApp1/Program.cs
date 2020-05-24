@@ -6,6 +6,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using IO.Swagger.Api;
 using IO.Swagger.Client;
 using IO.Swagger.Model;
@@ -13,7 +15,7 @@ using Newtonsoft.Json;
 
 namespace ConsoleApp1
 {
-    internal partial class Program
+    internal class Program
     {
         private static async Task<Tokens> RefreshCodeAsync(
             Creds2 creds)
@@ -41,9 +43,29 @@ namespace ConsoleApp1
 
         private static async Task Main(string[] args)
         {
-            Creds2 creds = JsonConvert.DeserializeObject<Creds2>(File.ReadAllText("creds2.txt"));
+            string azureFileName = "creds2.txt";
+            BlobServiceClient blobServiceClient = new BlobServiceClient(args[0]);
 
-            if (DateTime.UtcNow > creds.Tokens.GetExpiresAt())
+            //Create a unique name for the container
+            string containerName = "leaderboards";
+
+            // Create the container and return a container client object
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+            // Get a reference to a blob
+            BlobClient blobClient = containerClient.GetBlobClient(azureFileName);
+
+            // Download the blob's contents and save it to a file
+            BlobDownloadInfo download = await blobClient.DownloadAsync();
+            string fc;
+            using (StreamReader reader = new StreamReader(download.Content))
+            {
+                fc = await reader.ReadToEndAsync();
+            }
+
+            Creds2 creds = JsonConvert.DeserializeObject<Creds2>(fc);
+
+            if (DateTime.UtcNow < creds.Tokens.GetExpiresAt())
             {
                 Tokens tokens = await RefreshCodeAsync(creds);
 
@@ -54,7 +76,12 @@ namespace ConsoleApp1
                     Tokens = tokens
                 };
 
-                File.WriteAllText("creds2.txt", JsonConvert.SerializeObject(creds));
+                Console.WriteLine("Uploading to Blob storage as blob:\n\t {0}\n", blobClient.Uri);
+
+                // Open the file and upload its data
+                MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(creds) ?? ""));
+                await blobClient.UploadAsync(stream, true);
+                stream.Close();
             }
 
             IEnumerable<SummaryActivity> data = FetchData(creds.Tokens.AccessToken);
