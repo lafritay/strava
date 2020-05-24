@@ -21,7 +21,7 @@ jobs:
       run: dotnet restore ConsoleApp1/ConsoleApp1.sln
     - name: Build
       run: dotnet build ConsoleApp1/ConsoleApp1.sln --configuration Release --no-restore
-    - name: Run
+    - name: Run2
       run: dotnet run --project ConsoleApp1/ConsoleApp1/ConsoleApp1.csproj ${{ secrets.connectionstring }}
     - name: Status
       run: git status
