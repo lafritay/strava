@@ -18,10 +18,10 @@ jobs:
       with:
         dotnet-version: 3.1.101
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore ConsoleApp1/ConsoleApp1.sln
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build ConsoleApp1/ConsoleApp1.sln --configuration Release --no-restore
     - name: Run
-      run: dotnet run ${{ secrets.connectionstring }}
+      run: dotnet run ConsoleApp1/ConsoleApp1.sln ${{ secrets.connectionstring }}
     - name: Status
       run: git status
