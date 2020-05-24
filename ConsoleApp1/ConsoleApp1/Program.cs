@@ -43,6 +43,8 @@ namespace ConsoleApp1
 
         private static async Task Main(string[] args)
         {
+            Console.WriteLine(args[0].Length);
+
             string azureFileName = "creds2.txt";
             BlobServiceClient blobServiceClient = new BlobServiceClient(args[0]);
 
