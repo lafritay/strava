@@ -67,7 +67,7 @@ namespace ConsoleApp1
 
             Creds2 creds = JsonConvert.DeserializeObject<Creds2>(fc);
 
-            if (DateTime.UtcNow < creds.Tokens.GetExpiresAt())
+            if (DateTime.UtcNow > creds.Tokens.GetExpiresAt())
             {
                 Tokens tokens = await RefreshCodeAsync(creds);
 
@@ -86,7 +86,7 @@ namespace ConsoleApp1
                 stream.Close();
             }
 
-            IEnumerable<SummaryActivity> data = FetchData(creds.Tokens.AccessToken);
+            IEnumerable<SummaryActivity> data = await FetchData(containerClient, creds.Tokens.AccessToken);
             IEnumerable<UserSummary> collated = CollateData(data);
             StringBuilder distanceRows = new StringBuilder();
             UserSummary[] distance = collated.OrderByDescending(d => d.TotalDistance()).ToArray();
@@ -173,7 +173,8 @@ namespace ConsoleApp1
             return summaries.Values;
         }
 
-        private static IEnumerable<SummaryActivity> FetchData(
+        private static async Task<IEnumerable<SummaryActivity>> FetchData(
+            BlobContainerClient containerClient,
             string accessToken)
         {
             Configuration.ApiKey["access"] = accessToken;
@@ -181,8 +182,19 @@ namespace ConsoleApp1
             ApiClient client = new ApiClient();
             ClubsApi clubsApi = new ClubsApi(client);
 
-            string existingData = File.ReadAllText(c_dataPath);
-            Dictionary<string, Activity> stored = JsonConvert.DeserializeObject<Activity[]>(existingData)
+            // Get a reference to a blob
+            string azureFileName = "data.json";
+            BlobClient blobClient = containerClient.GetBlobClient(azureFileName);
+
+            // Download the blob's contents and save it to a file
+            BlobDownloadInfo download = await blobClient.DownloadAsync();
+            string fc;
+            using (StreamReader reader = new StreamReader(download.Content))
+            {
+                fc = await reader.ReadToEndAsync();
+            }
+
+            Dictionary<string, Activity> stored = JsonConvert.DeserializeObject<Activity[]>(fc)
                 .ToDictionary(a => a.Id);
 
             List<SummaryActivity> activities = clubsApi.GetClubActivitiesById(661551, 1, 200);
@@ -204,12 +216,14 @@ namespace ConsoleApp1
             }
 
             string data = JsonConvert.SerializeObject(stored.Values);
-            File.WriteAllText(c_dataPath, data);
+
+            // Open the file and upload its data
+            MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(data ?? ""));
+            await blobClient.UploadAsync(stream, true);
+            stream.Close();
 
             return stored.Values.Select(s => s.Summary);
         }
-
-        private const string c_dataPath = "../../../data.json";
     }
 
     public class Activity
