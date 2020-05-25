@@ -24,5 +24,7 @@ jobs:
       run: dotnet build ConsoleApp1/ConsoleApp1.sln --configuration Release --no-restore
     - name: Run2
       run: dotnet run --project ConsoleApp1/ConsoleApp1/ConsoleApp1.csproj $super_secret
+      env:
+        super_secret: ${{ secrets.connectionstring }}
     - name: Status
       run: git status
