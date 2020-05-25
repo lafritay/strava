@@ -120,12 +120,12 @@ namespace ConsoleApp1
                 timeRows.AppendLine(builder.ToString());
             }
 
-            string template = File.ReadAllText("../../../Template.html");
+            string template = File.ReadAllText("Template.html");
             string content = template.Replace("{{distanceRows}}", distanceRows.ToString());
             content = content.Replace("{{timeRows}}", timeRows.ToString());
             content = content.Replace("{{updated}}", DateTime.Now.ToString("dddd, MMMM dd, hh:mm tt ET"));
 
-            File.WriteAllText("../../../../../index.html", content);
+            File.WriteAllText("../../index.html", content);
         }
 
         private static void AddCell(
