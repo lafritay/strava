@@ -215,6 +215,15 @@ namespace ConsoleApp1
                 throw new Exception("Found bad value, can't trust the sort");
             }
 
+            // Remove the items in the blocklist
+            foreach (string blocked in s_blocklist)
+            {
+                if (!stored.Remove(blocked))
+                {
+                    throw new Exception($"Someone's Cheating: {blocked}");
+                }
+            }
+
             string data = JsonConvert.SerializeObject(stored.Values);
 
             // Open the file and upload its data
@@ -224,6 +233,21 @@ namespace ConsoleApp1
 
             return stored.Values.Select(s => s.Summary);
         }
+
+        private static readonly List<string> s_blocklist = new List<string>
+        {
+            "Matthew_H._1971_6467.5", //"Matthew-5pm dash before curfew",
+            "Steven_H._2160_6805.2", //"Steven-It’s a Hot One Today",
+            "Matthew_H._3073_3062.7", //"Matthew-Lunch scoot",
+            "Matthew_H._7110_2502.1", //"Matthew-Dinner walk",
+            "Matthew_H._1866_2162.7", //"Matthew-Reggy marching",
+            "Matthew_H._2799_2816.6", //"Matthew-Dual stroller and dual breakdowns",
+            "Matthew_H._1680_2139", //"Matthew-Conference call break dog walk",
+            "Matthew_H._601_709.7", //"Matthew-Appetizer cool down",
+            "Taylor_L._666_956.9", //"Taylor-Wake up in the morning feeling like P. Diddy",
+            "Taylor_L._1614_4966.8", //"Taylor-3 is my new 2",
+            "John_B._3457_4879", //"John-Bonus points?"
+        };
     }
 
     public class Activity
