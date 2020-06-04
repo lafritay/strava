@@ -88,6 +88,7 @@ namespace ConsoleApp1
 
             IEnumerable<SummaryActivity> data = await FetchData(containerClient, creds.Tokens.AccessToken);
             IEnumerable<UserSummary> collated = CollateData(data);
+
             StringBuilder distanceRows = new StringBuilder();
             UserSummary[] distance = collated.OrderByDescending(d => d.TotalDistance()).ToArray();
             for (int i = 0; i < distance.Length; i++)
@@ -120,9 +121,69 @@ namespace ConsoleApp1
                 timeRows.AppendLine(builder.ToString());
             }
 
+            StringBuilder longestRunRows = new StringBuilder();
+            SummaryActivity[] runs = data
+                .Where(a => a.Type == ActivityType.Run)
+                .OrderByDescending(a => a.Distance)
+                .Take(3)
+                .ToArray();
+            for (int i = 0; i < runs.Length; i++)
+            {
+                SummaryActivity activity = runs[i];
+                StringBuilder builder = new StringBuilder();
+                builder.Append("<tr>");
+                AddCell(builder, $"{i + 1}. {activity.Athlete.FirstName}");
+                AddCell(builder, activity.Distance.Value.InMiles());
+                AddCell(builder, activity.Name);
+                builder.Append("</tr>");
+
+                longestRunRows.AppendLine(builder.ToString());
+            }
+
+            StringBuilder longestWalkRows = new StringBuilder();
+            SummaryActivity[] walks = data
+                .Where(a => a.Type == ActivityType.Walk)
+                .OrderByDescending(a => a.Distance)
+                .Take(3)
+                .ToArray();
+            for (int i = 0; i < walks.Length; i++)
+            {
+                SummaryActivity activity = walks[i];
+                StringBuilder builder = new StringBuilder();
+                builder.Append("<tr>");
+                AddCell(builder, $"{i + 1}. {activity.Athlete.FirstName}");
+                AddCell(builder, activity.Distance.Value.InMiles());
+                AddCell(builder, activity.Name);
+                builder.Append("</tr>");
+
+                longestWalkRows.AppendLine(builder.ToString());
+            }
+
+            StringBuilder longestRideRows = new StringBuilder();
+            SummaryActivity[] rides = data
+                .Where(a => a.Type == ActivityType.Ride)
+                .OrderByDescending(a => a.Distance)
+                .Take(3)
+                .ToArray();
+            for (int i = 0; i < rides.Length; i++)
+            {
+                SummaryActivity activity = rides[i];
+                StringBuilder builder = new StringBuilder();
+                builder.Append("<tr>");
+                AddCell(builder, $"{i + 1}. {activity.Athlete.FirstName}");
+                AddCell(builder, activity.Distance.Value.InMiles());
+                AddCell(builder, activity.Name);
+                builder.Append("</tr>");
+
+                longestRideRows.AppendLine(builder.ToString());
+            }
+
             string template = File.ReadAllText("ConsoleApp1/ConsoleApp1/Template.html");
             string content = template.Replace("{{distanceRows}}", distanceRows.ToString());
             content = content.Replace("{{timeRows}}", timeRows.ToString());
+            content = content.Replace("{{longestRunRows}}", longestRunRows.ToString());
+            content = content.Replace("{{longestWalkRows}}", longestWalkRows.ToString());
+            content = content.Replace("{{longestRideRows}}", longestRideRows.ToString());
             content = content.Replace("{{updated}}", DateTime.Now.AddHours(-4).ToString("dddd, MMMM dd, hh:mm tt ET"));
 
             File.WriteAllText("index.html", content);
