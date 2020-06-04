@@ -121,6 +121,28 @@ namespace ConsoleApp1
                 timeRows.AppendLine(builder.ToString());
             }
 
+            StringBuilder queenRows = new StringBuilder();
+            SummaryActivity[] queens = data
+                .Where(a => a.Type == ActivityType.Run)
+                .Where(a => a.Name.Contains("Queen"))
+                .Where(a => a.MovingTime < 250)
+                .OrderByDescending(a => a.Distance)
+                .Take(3)
+                .ToArray();
+            for (int i = 0; i < queens.Length; i++)
+            {
+                SummaryActivity activity = queens[i];
+                StringBuilder builder = new StringBuilder();
+                builder.Append("<tr>");
+                AddCell(builder, $"{i + 1}. {activity.Athlete.FirstName}");
+                AddCell(builder, activity.Distance.Value.InMiles());
+                AddCell(builder, activity.MovingTime.Value.ToString());
+                AddCell(builder, activity.Name);
+                builder.Append("</tr>");
+
+                queenRows.AppendLine(builder.ToString());
+            }
+
             StringBuilder longestRunRows = new StringBuilder();
             SummaryActivity[] runs = data
                 .Where(a => a.Type == ActivityType.Run)
@@ -181,6 +203,7 @@ namespace ConsoleApp1
             string template = File.ReadAllText("ConsoleApp1/ConsoleApp1/Template.html");
             string content = template.Replace("{{distanceRows}}", distanceRows.ToString());
             content = content.Replace("{{timeRows}}", timeRows.ToString());
+            content = content.Replace("{{queenRows}}", queenRows.ToString());
             content = content.Replace("{{longestRunRows}}", longestRunRows.ToString());
             content = content.Replace("{{longestWalkRows}}", longestWalkRows.ToString());
             content = content.Replace("{{longestRideRows}}", longestRideRows.ToString());
