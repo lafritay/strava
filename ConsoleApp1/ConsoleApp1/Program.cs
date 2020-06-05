@@ -299,7 +299,15 @@ namespace ConsoleApp1
                 throw new Exception("Found bad value, can't trust the sort");
             }
 
-            // Remove the items in the blocklist
+            string data = JsonConvert.SerializeObject(stored.Values);
+
+            // Open the file and upload its data
+            MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(data ?? ""));
+            await blobClient.UploadAsync(stream, true);
+            stream.Close();
+
+            // Remove the items in the blocklist after we persist the data. This helps us prevent failures when we
+            // don't get the blocked items from strava
             foreach (string blocked in s_blocklist)
             {
                 if (!stored.Remove(blocked))
@@ -307,13 +315,6 @@ namespace ConsoleApp1
                     throw new Exception($"Someone's Cheating: {blocked}");
                 }
             }
-
-            string data = JsonConvert.SerializeObject(stored.Values);
-
-            // Open the file and upload its data
-            MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(data ?? ""));
-            await blobClient.UploadAsync(stream, true);
-            stream.Close();
 
             return stored.Values.Select(s => s.Summary);
         }
@@ -332,58 +333,5 @@ namespace ConsoleApp1
             "Taylor_L._1614_4966.8", //"Taylor-3 is my new 2",
             "John_B._3457_4879", //"John-Bonus points?"
         };
-    }
-
-    public class Activity
-    {
-        public Activity(
-            SummaryActivity summary)
-        {
-            Id = $"{summary.Athlete.FirstName}_{summary.Athlete.LastName}_{summary.ElapsedTime}" +
-                $"_{summary.Distance}";
-            Summary = summary;
-        }
-
-        public string Id { get; }
-
-        public SummaryActivity Summary { get; }
-    }
-
-    public class UserSummary
-    {
-        public string User { get; set; }
-
-        public int Count { get; set; }
-
-        public long TotalTime { get; set; }
-
-        public long TotalMovingTime { get; set; }
-
-        public float DistanceRan { get; set; }
-
-        public float DistanceBiked { get; set; }
-
-        public float DistanceWalked { get; set; }
-
-        public float TotalDistance()
-        {
-            return (float)(DistanceRan + DistanceWalked + (DistanceBiked / 3.5));
-        }
-    }
-
-    public static class Extensions
-    {
-        public static string InMiles(
-            this float meters)
-        {
-            double miles = meters * 0.000621371;
-            return Math.Round(miles, 2).ToString();
-        }
-
-        public static string InHours(
-            this long seconds)
-        {
-            return TimeSpan.FromSeconds(seconds).ToString();
-        }
     }
 }
