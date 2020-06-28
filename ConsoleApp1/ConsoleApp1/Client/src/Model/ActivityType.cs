@@ -14,6 +14,7 @@ namespace IO.Swagger.Model
         Hike,
         Wheelchair,
         Workout,
-        NordicSki
+        NordicSki,
+Kayaking
     }
 }
